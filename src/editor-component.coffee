@@ -39,6 +39,7 @@ EditorComponent = React.createClass
   inputEnabled: true
   scrollViewMeasurementInterval: 100
   scopedCharacterWidthsChangeCount: null
+  performSyncUpdates: false
 
   render: ->
     {focused, fontSize, lineHeight, fontFamily, showIndentGuide, showInvisibles, visible} = @state
@@ -187,7 +188,9 @@ EditorComponent = React.createClass
     @props.parentView.trigger 'editor:display-updated'
 
   requestUpdate: ->
-    unless @updateRequested
+    if @performSyncUpdates
+      @forceUpdate()
+    else unless @updateRequested
       @updateRequested = true
       process.nextTick =>
         @updateRequested = false
