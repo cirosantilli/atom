@@ -145,7 +145,6 @@ class Editor extends Model
   cursors: null
   selections: null
   suppressSelectionMerging: false
-  updateBatchDepth: 0
 
   @delegatesMethods 'suggestedIndentForBufferRow', 'autoIndentBufferRow', 'autoIndentBufferRows',
     'autoDecreaseIndentForBufferRow', 'toggleLineCommentForBufferRow', 'toggleLineCommentsForBufferRows',
@@ -1595,11 +1594,10 @@ class Editor extends Model
 
   moveCursors: (fn) ->
     @movingCursors = true
-    @batchUpdates =>
-      fn(cursor) for cursor in @getCursors()
-      @mergeCursors()
-      @movingCursors = false
-      @emit 'cursors-moved'
+    fn(cursor) for cursor in @getCursors()
+    @mergeCursors()
+    @movingCursors = false
+    @emit 'cursors-moved'
 
   cursorMoved: (event) ->
     @emit 'cursor-moved', event
@@ -1920,8 +1918,7 @@ class Editor extends Model
   #
   # fn - A {Function} to call inside the transaction.
   transact: (fn) ->
-    @batchUpdates =>
-      @buffer.transact(fn)
+    @buffer.transact(fn)
 
   # Public: Start an open-ended transaction.
   #
@@ -1940,14 +1937,6 @@ class Editor extends Model
   # Public: Abort an open transaction, undoing any operations performed so far
   # within the transaction.
   abortTransaction: -> @buffer.abortTransaction()
-
-  batchUpdates: (fn) ->
-    @emit 'batched-updates-started' if @updateBatchDepth is 0
-    @updateBatchDepth++
-    result = fn()
-    @updateBatchDepth--
-    @emit 'batched-updates-ended' if @updateBatchDepth is 0
-    result
 
   inspect: ->
     "<Editor #{@id}>"
